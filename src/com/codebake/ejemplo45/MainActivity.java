@@ -1,36 +1,133 @@
 package com.codebake.ejemplo45;
 
-import android.support.v7.app.ActionBarActivity;
+
+import android.net.Uri;
 import android.os.Bundle;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
+import android.graphics.drawable.Drawable;
+
+
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
+import android.widget.ToggleButton;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements SendDataDialogFragment.DialogListener {
+	private int room_type = 0;
+	public final static String[] rooms = new String[]{"regular","de lujo"};
+	public final static String DIALOG_TAG = "dialogo";
+	
+	private boolean favorite = false;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+	
+		ToggleButton toggle_recommendation = (ToggleButton)findViewById(R.id.toggle_recommendation);
+		toggle_recommendation.setChecked(true);
+	}
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		 getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    switch (item.getItemId()) {
+	        case R.id.action_fav:
+	        	Drawable icon = null;
+	        	if (favorite) {
+	        		icon = getResources().getDrawable(R.drawable.rating_not_important);	
+	        	} else {
+	        		icon = getResources().getDrawable(R.drawable.rating_important);
+	        	}
+
+	        	favorite = !favorite;
+	        	item.setIcon(icon);
+	            return true;
+	        case R.id.action_share:
+	        	Intent i = new Intent();
+	        	i.setAction(Intent.ACTION_SEND);
+	        	i.putExtra(Intent.EXTRA_TEXT, "Me gust— la habitaci—n tipo " + rooms[room_type] + " del hotel");	        	
+	        	i.putExtra(Intent.EXTRA_STREAM, Uri.parse("android.resource://" + getPackageName() + "/drawable/" + R.drawable.hotel1));
+	        	i.setType("image/jpeg");
+	        	startActivity(Intent.createChooser(i, getResources().getText(R.string.msg_share)));	        	
+	            return true;
+	        case R.id.action_dialog:
+	        	SendDataDialogFragment frag = new SendDataDialogFragment();
+	        	frag.show(getSupportFragmentManager(),DIALOG_TAG);	        	
+	        	return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}	
+	
+	public void toggleClicked(View v){
+		Toast.makeText(getApplicationContext(), "Toggle", Toast.LENGTH_SHORT).show();
+	}
+	
+	@Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+		Toast.makeText(getApplicationContext(), "Click " + getResources().getString(R.string.msg_yes), Toast.LENGTH_SHORT).show();
     }
+	
+	@Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+		Toast.makeText(getApplicationContext(), "Click " + getResources().getString(R.string.msg_no), Toast.LENGTH_SHORT).show();
+    }	
+}
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
+class SendDataDialogFragment extends DialogFragment {
+    public interface DialogListener {
+        public void onDialogPositiveClick(DialogFragment dialog);
+        public void onDialogNegativeClick(DialogFragment dialog);
     }
-
+    
+    DialogListener listener;
+    
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            listener = (DialogListener) activity;
+        } catch (ClassCastException e) {}
+    }
+    
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {        
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(R.string.dialog_title)
+        	   .setSingleChoiceItems(R.array.array_disclaimer, -1, new OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						Toast.makeText(getActivity(), "Click " + which, Toast.LENGTH_SHORT).show();
+					}
+				
+        	   })
+               .setPositiveButton(R.string.msg_yes, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                	   listener.onDialogPositiveClick(SendDataDialogFragment.this);
+                   }
+               })
+               .setNegativeButton(R.string.msg_no, new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {	
+                	   listener.onDialogPositiveClick(SendDataDialogFragment.this);
+                	   
+                   }
+               });
+        return builder.create();
     }
 }
