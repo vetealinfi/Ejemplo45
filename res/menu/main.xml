@@ -16,8 +16,8 @@
         android:title="@string/action_share"/>
     
 	<item android:id="@+id/three_dots_item"
-	      android:icon="@drawable/ic_action_overflow"
-	      android:title=""
+	      android:icon="@drawable/ic_action_share"
+	      android:title="@string/msg_rate"
 	      android:showAsAction="always">
 	      <menu>
 			<item
